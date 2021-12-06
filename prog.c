@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
     struct sockaddr_in remoteAddr;
     bzero(&remoteAddr, sizeof(remoteAddr));
     remoteAddr.sin_family = AF_INET;
-    Inet_pton(AF_INET, argv[1], &remoteAddr.sin_addr);  // 如果給的ip address是錯的，則會產生error message
+    Inet_pton(AF_INET, argv[2], &remoteAddr.sin_addr);  // 如果給的ip address是錯的，則會產生error message
               
     int pid = getpid();  // get process id for later identification
     
