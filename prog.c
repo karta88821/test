@@ -10,6 +10,7 @@
 #include "sockwrap.h"
 #include "ip_list.h"
 
+#define ICMP_HEADER_LEN 8
 #define TIMEOUT 1000  /* Time of waiting for packets with last set TTL in miliseconds (= 1 second) */
 #define TTL_LIMIT 30
 #define REQUESTS_PER_TTL 3
