@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <netinet/ip_icmp.h>
 #include "sockwrap.h"
-#include "icmp.h"
 #include "ip_list.h"
 
 #define TIMEOUT 1000  /* Time of waiting for packets with last set TTL in miliseconds (= 1 second) */
@@ -16,12 +15,25 @@
 #define REQUESTS_PER_TTL 3
 #define BUFFER_SIZE 128
 
+uint16_t in_cksum(uint16_t *addr, int len, int csum) {
+    int sum = csum;
+
+    while(len > 1)  {
+        sum += *addr++;
+        len -= 2;
+    }
+
+    if(len == 1) sum += htons(*(uint8_t *)addr << 8);
+
+    sum = (sum >> 16) + (sum & 0xffff); 
+    sum += (sum >> 16);        
+    return ~sum; 
+}
 
 // Returns the difference between two times in miliseconds.
 double timeDifference(struct timeval start, struct timeval end) {
     return (end.tv_sec - start.tv_sec)*1000.0 + (end.tv_usec - start.tv_usec)/1000.0;
 }
-
 
 int main(int argc, char* argv[]) {
     
@@ -43,7 +55,6 @@ int main(int argc, char* argv[]) {
     begin.tv_sec = 0;
     begin.tv_usec = 1000;  // (= 1 ms)
     Setsockopt(sockId, SOL_SOCKET, SO_RCVTIMEO, &begin, sizeof(begin));  // 設定等待封包的時間
-    
     
     char icmpRequestBuffer[BUFFER_SIZE], replyBuffer[BUFFER_SIZE];  // ICMP request 和 收到的IP封包
 
@@ -95,14 +106,14 @@ int main(int argc, char* argv[]) {
 			// 檢查ICMP的type
 			if(icmpHeader->icmp_type != ICMP_ECHOREPLY && 
 			  !(icmpHeader->icmp_type == ICMP_TIME_EXCEEDED && icmpHeader->icmp_code == ICMP_EXC_TTL)) continue;
-			// If the packet's type is neither echo reply, nor time exceeded because of TTL depletion
 			
+			
+			// 若ICMP的type為time_exceeded，shift icmpHeader to the copy of our request
 			if(icmpHeader->icmp_type == ICMP_TIME_EXCEEDED)
 			icmpHeader = (struct icmp *) (icmpHeader->icmp_data + ((struct ip *) (icmpHeader->icmp_data))->ip_hl*4);
-			// if we got time_exceeded packet, shift icmpHeader to the copy of our request
 			
-			if(ntohs(icmpHeader->icmp_id) != pid || sequence - ntohs(icmpHeader->icmp_seq) >= REQUESTS_PER_TTL) continue;
 			// is icmp_id equal to our pid and it's one of the latest (three) packets sent?
+			if(ntohs(icmpHeader->icmp_id) != pid || sequence - ntohs(icmpHeader->icmp_seq) >= REQUESTS_PER_TTL) continue;
 			
 			elapsedTime += timeDifference(sendTime[(ntohs(icmpHeader->icmp_seq)-1) % REQUESTS_PER_TTL], current);
 			insert(ipsThatReplied, reply->ip_src);
@@ -111,7 +122,7 @@ int main(int argc, char* argv[]) {
 			if(icmpHeader->icmp_type == ICMP_ECHOREPLY) stop = 1;
 		}
 	
-		// Output
+		// Prints router info
 		printf("%2d. ", ttl);
 		if(repliedPacketsCnt == 0) { printf("*\n"); continue; }
 		printIpList(ipsThatReplied);

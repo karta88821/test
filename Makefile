@@ -4,7 +4,7 @@ TARGETS = prog
  
 all: $(TARGETS)
 
-prog: prog.o sockwrap.o icmp.o ip_list.o
+prog: prog.o sockwrap.o ip_list.o
 
 clean: 
 	rm -f *.o	
