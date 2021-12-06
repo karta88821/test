@@ -6,7 +6,6 @@
 
 #define IP_LIST_ERROR(str) { fprintf(stderr, "%s\n", str); exit(1); }
 
-
 // Returns a pointer to a newly created list.
 ip_list *createIpList() {
     ip_list *root = (ip_list *) malloc(sizeof(ip_list));
@@ -15,14 +14,12 @@ ip_list *createIpList() {
     return root;
 }
 
-
 // Frees the list recursively
 void destroyIpList(ip_list *node) {
     if(node == NULL) return;
     destroyIpList(node->next);
     free(node);
 }
-
 
 // Inserts an IP address right after the given node
 void addAfterTheNode(ip_list *preceding, struct in_addr x) {
@@ -33,7 +30,6 @@ void addAfterTheNode(ip_list *preceding, struct in_addr x) {
     preceding->next = newNode;
 }
   
-
 // Inserts in_addr x into the ordered list
 int insert(ip_list *root, struct in_addr x) {
     ip_list *cur = root, *tmp;
@@ -47,7 +43,6 @@ int insert(ip_list *root, struct in_addr x) {
     addAfterTheNode(cur, x);
     return 1;
 }
-
 
 // Prints the list
 void printIpList(ip_list *root) {

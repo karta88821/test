@@ -8,10 +8,10 @@
 #define ERROR(str) { fprintf(stderr, "%s: %s\n", str, strerror(errno)); exit(1); }
 #define CUSTOM_ERROR_MESSAGE(str) { fprintf(stderr, "%s\n", str); exit(1); }
 
-int Socket(int family, int type, int protocol)
+int Socket(int domain, int type, int protocol)
 {
 	int	n;
-	if ( (n = socket(family, type, protocol)) < 0)
+	if ( (n = socket(domain, type, protocol)) < 0)
 		ERROR ("socket error");
 	return n;
 }
@@ -36,9 +36,17 @@ void Sendto(int fd, const void *ptr, int nbytes, int flags, const struct sockadd
 		ERROR ("sendto error");
 }
 
+/*
+	Setsockopt可以設定socket相關的選項
+	
+	level:
+		1)SOL_SOCKET: 通用
+		2)IPPROTO_IP: IP
+		3)IPPROTO_TCP: TCP　
+*/
 void Setsockopt(int sockfd, int level, int optname, const void *optval, socklen_t optlen)
 {
-	if (setsockopt(sockfd,level,optname,optval,optlen) < 0) 
+	if (setsockopt(sockfd, level, optname, optval, optlen) < 0) 
 		ERROR ("setsockopt error");
 }
 
